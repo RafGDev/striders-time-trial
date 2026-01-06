@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:16
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: striders_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  postgres-test:
+    image: postgres:16
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: striders_db_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+  localstack:
+    image: localstack/localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=sqs,sns
+      - DEBUG=0
+    volumes:
+      - "./infrastructure/localstack:/etc/localstack/init/ready.d"
+      - localstack_data:/var/lib/localstack
+
+volumes:
+  postgres_data:
+  localstack_data:
+

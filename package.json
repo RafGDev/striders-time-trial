@@ -1,0 +1,26 @@
+{
+  "name": "striders-time-trial",
+  "private": true,
+  "packageManager": "npm@10.8.2",
+  "workspaces": [
+    "packages/*",
+    "api"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:api": "turbo run dev --filter=api",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e --filter=@striders/e2e",
+    "db:generate": "turbo run generate --filter=@striders/database",
+    "db:migrate": "turbo run migrate:dev --filter=@striders/database",
+    "db:seed": "turbo run db:seed --filter=@striders/database",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "devDependencies": {
+    "turbo": "^2"
+  }
+}

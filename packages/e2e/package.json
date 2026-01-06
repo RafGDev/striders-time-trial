@@ -1,0 +1,21 @@
+{
+  "name": "@striders/e2e",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "vitest run"
+  },
+  "dependencies": {
+    "@striders/database": "*",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.7",
+    "dotenv": "^17.2.3",
+    "typescript": "^5.7.3",
+    "vitest": "^3.1.0",
+    "wait-on": "^8.0.0"
+  }
+}

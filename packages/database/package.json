@@ -1,0 +1,28 @@
+{
+  "name": "@striders/database",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "generate": "prisma generate && npm run build",
+    "migrate:dev": "prisma migrate dev && npm run generate",
+    "migrate:deploy": "prisma migrate deploy",
+    "migrate:reset": "prisma migrate reset",
+    "db:seed": "npx tsx prisma/seed.ts",
+    "db:reset": "prisma migrate reset"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.1",
+    "@prisma/adapter-pg": "^7.2.0",
+    "@prisma/client": "^7.2.0",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "dotenv": "^17.2.3",
+    "prisma": "^7.2.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
