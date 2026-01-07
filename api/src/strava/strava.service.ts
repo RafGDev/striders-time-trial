@@ -22,9 +22,6 @@ export class StravaService {
     private readonly configService: ConfigService<EnvironmentVariables, true>
   ) {}
 
-  /**
-   * Get a valid access token for a user, refreshing if needed
-   */
   private async getValidAccessToken(userId: string): Promise<string> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -39,23 +36,17 @@ export class StravaService {
       throw new UnauthorizedException("Strava not connected");
     }
 
-    // Check if token is expired (with 5 min buffer)
     const now = new Date();
     const expiresAt = user.stravaTokenExpiresAt;
-    const bufferMs = 5 * 60 * 1000; // 5 minutes
+    const bufferMs = 5 * 60 * 1000;
 
     if (expiresAt && expiresAt.getTime() - bufferMs > now.getTime()) {
-      // Token is still valid
       return user.stravaAccessToken;
     }
 
-    // Token expired, refresh it
     return this.refreshToken(userId, user.stravaRefreshToken);
   }
 
-  /**
-   * Refresh the Strava access token
-   */
   private async refreshToken(
     userId: string,
     refreshToken: string
@@ -66,8 +57,8 @@ export class StravaService {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        client_id: stravaConfig.clientId,
-        client_secret: stravaConfig.clientSecret,
+        client_id: stravaConfig?.clientId,
+        client_secret: stravaConfig?.clientSecret,
         grant_type: "refresh_token",
         refresh_token: refreshToken,
       }),
@@ -79,7 +70,6 @@ export class StravaService {
 
     const data = await response.json();
 
-    // Update the stored tokens
     await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -92,9 +82,6 @@ export class StravaService {
     return data.access_token;
   }
 
-  /**
-   * Fetch recent activities from Strava for a user
-   */
   async getActivities(
     userId: string,
     options?: {
@@ -135,7 +122,6 @@ export class StravaService {
 
     const activities: StravaActivity[] = await response.json();
 
-    // Filter to only running activities
     return activities.filter(
       (a) =>
         a.type === "Run" ||

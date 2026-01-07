@@ -16,11 +16,15 @@
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:cov": "vitest run --coverage"
+    "test:cov": "vitest run --coverage",
+    "deploy": "serverless deploy",
+    "deploy:prod": "serverless deploy --stage prod",
+    "logs": "serverless logs -f api -t"
   },
   "dependencies": {
     "@apollo/server": "^5.2.0",
     "@as-integrations/fastify": "^3.1.0",
+    "@fastify/aws-lambda": "^4.1.0",
     "@nestjs/apollo": "^13.2.3",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
@@ -41,6 +45,10 @@
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "esbuild-decorators": "^1.0.0",
+    "serverless": "^3.39.0",
+    "serverless-esbuild": "^1.52.1",
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^11.0.0",

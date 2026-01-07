@@ -16,14 +16,12 @@ describe("Clubs Resolver", () => {
   beforeEach(async () => {
     await cleanDatabase();
 
-    // Create a test user
     const user = await prisma.user.create({
       data: { name: `Test User ${Date.now()}` },
     });
     testUserId = user.id;
     testToken = generateTestToken(user.id, user.name);
 
-    // Create a test club
     const club = await prisma.club.create({
       data: {
         name: "Sydney Striders",
@@ -104,7 +102,6 @@ describe("Clubs Resolver", () => {
     });
 
     it("should fail when user is already a member", async () => {
-      // First, join the club
       await prisma.clubMember.create({
         data: {
           userId: testUserId,
@@ -139,7 +136,6 @@ describe("Clubs Resolver", () => {
           }
         `,
         { input: { inviteCode: "STRIDERS2024" } }
-        // No token
       );
 
       expect(response.errors).toBeDefined();
@@ -170,7 +166,6 @@ describe("Clubs Resolver", () => {
     });
 
     it("should return user's club memberships", async () => {
-      // Join the club
       await prisma.clubMember.create({
         data: {
           userId: testUserId,
@@ -216,7 +211,6 @@ describe("Clubs Resolver", () => {
           }
         }
       `);
-      // No token
 
       expect(response.errors).toBeDefined();
     });

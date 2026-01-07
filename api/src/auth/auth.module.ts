@@ -16,9 +16,9 @@ import type { EnvironmentVariables } from "../config/env.config";
       ): JwtModuleOptions => {
         const jwtConfig = configService.get("jwt", { infer: true });
         return {
-          secret: jwtConfig.secret,
+          secret: jwtConfig?.secret ?? "fallback-secret",
           signOptions: {
-            expiresIn: jwtConfig.expiresIn,
+            expiresIn: jwtConfig?.expiresIn ?? "7d",
           },
         } as JwtModuleOptions;
       },

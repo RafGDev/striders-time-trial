@@ -1,0 +1,70 @@
+service: striders-api
+
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ${opt:region, 'ap-southeast-2'}
+  memorySize: 512
+  timeout: 30
+  environment:
+    NODE_ENV: production
+    DATABASE_URL: ${env:DATABASE_URL}
+    JWT_SECRET: ${env:JWT_SECRET}
+    STRAVA_CLIENT_ID: ${env:STRAVA_CLIENT_ID}
+    STRAVA_CLIENT_SECRET: ${env:STRAVA_CLIENT_SECRET}
+    STRAVA_CALLBACK_URL: ${env:STRAVA_CALLBACK_URL}
+    APP_URL: ${env:APP_URL}
+
+plugins:
+  - serverless-esbuild
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    target: node20
+    platform: node
+    keepNames: true
+    format: cjs
+    plugins: ./esbuild.plugins.js
+    external:
+      # NestJS optional dependencies
+      - "@nestjs/microservices"
+      - "@nestjs/platform-express"
+      - "@nestjs/websockets"
+      - "@nestjs/websockets/socket-module"
+      - "@nestjs/microservices/microservices-module"
+      # Apollo optional dependencies
+      - "@apollo/gateway"
+      - "@apollo/subgraph"
+      - "@apollo/subgraph/package.json"
+      - "@apollo/subgraph/dist/directives"
+      - "@as-integrations/express5"
+      # Fastify optional dependencies
+      - "@fastify/static"
+      - "@fastify/view"
+      # Other optional dependencies
+      - ts-morph
+      - class-transformer/storage
+
+functions:
+  api:
+    handler: src/lambda.handler
+    events:
+      - http:
+          path: /
+          method: ANY
+          cors: true
+      - http:
+          path: /{proxy+}
+          method: ANY
+          cors: true
+
+package:
+  patterns:
+    - "!node_modules/**"
+    - "node_modules/.prisma/**"
+    - "node_modules/@prisma/client/**"

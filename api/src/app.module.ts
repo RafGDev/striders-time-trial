@@ -24,29 +24,29 @@ import { StravaModule } from "./strava/strava.module";
     MessagingModule.forRootAsync({
       useFactory: (
         configService: ConfigService<EnvironmentVariables, true>
-      ) => ({
-        sns: {
-          region: configService.get("aws.region", { infer: true }),
-          endpoint: configService.get("aws.endpoint", { infer: true }),
-          credentials: configService.get("aws.accessKeyId", { infer: true })
-            ? {
-                accessKeyId: configService.get("aws.accessKeyId", {
-                  infer: true,
-                })!,
-                secretAccessKey: configService.get("aws.secretAccessKey", {
-                  infer: true,
-                })!,
-              }
-            : undefined,
-        },
-      }),
+      ) => {
+        const awsConfig = configService.get("aws", { infer: true });
+        return {
+          sns: {
+            region: awsConfig?.region ?? "ap-southeast-2",
+            endpoint: awsConfig?.endpoint,
+            credentials: awsConfig?.accessKeyId
+              ? {
+                  accessKeyId: awsConfig.accessKeyId,
+                  secretAccessKey: awsConfig.secretAccessKey!,
+                }
+              : undefined,
+          },
+        };
+      },
       inject: [ConfigService],
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: true,
+      autoSchemaFile: "schema.graphql",
       sortSchema: true,
       playground: true,
+      introspection: true,
       context: ({ request }: { request: unknown }) => ({ req: request }),
     }),
     AuthModule,

@@ -25,10 +25,6 @@ export class AuthController {
     private readonly configService: ConfigService<EnvironmentVariables, true>
   ) {}
 
-  /**
-   * Initiates Strava OAuth flow
-   * Redirect users here to start login
-   */
   @Get("strava")
   async stravaLogin(@Res() res: FastifyReply) {
     const stravaConfig = this.configService.get("strava", { infer: true });
@@ -42,10 +38,6 @@ export class AuthController {
     return res.status(302).redirect(authUrl.toString());
   }
 
-  /**
-   * Strava OAuth callback
-   * Strava redirects here after user authorizes
-   */
   @Get("strava/callback")
   async stravaCallback(
     @Query("code") code: string,
@@ -63,7 +55,6 @@ export class AuthController {
     const stravaConfig = this.configService.get("strava", { infer: true });
     const appUrl = this.configService.get("appUrl", { infer: true });
 
-    // Exchange code for access token
     const tokenResponse = await fetch("https://www.strava.com/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -81,7 +72,6 @@ export class AuthController {
 
     const tokenData = await tokenResponse.json();
 
-    // Strava returns athlete info in the token response
     const stravaUser = {
       stravaId: String(tokenData.athlete.id),
       firstName: tokenData.athlete.firstname,
@@ -102,10 +92,6 @@ export class AuthController {
     return res.status(302).redirect(redirectUrl.toString());
   }
 
-  /**
-   * Exchange Strava authorization code for JWT token
-   * Used by mobile apps that handle the OAuth redirect directly
-   */
   @Post("strava/token")
   async exchangeStravaToken(@Body() body: ExchangeTokenDto) {
     const { code, redirectUri } = body;
@@ -120,7 +106,6 @@ export class AuthController {
 
     const stravaConfig = this.configService.get("strava", { infer: true });
 
-    // Exchange code for access token
     const tokenResponse = await fetch("https://www.strava.com/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -140,7 +125,6 @@ export class AuthController {
 
     const tokenData = await tokenResponse.json();
 
-    // Strava returns athlete info in the token response
     const stravaUser = {
       stravaId: String(tokenData.athlete.id),
       firstName: tokenData.athlete.firstname,

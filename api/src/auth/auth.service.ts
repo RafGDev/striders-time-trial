@@ -10,7 +10,7 @@ export interface StravaUser {
   avatarUrl: string;
   accessToken: string;
   refreshToken: string;
-  expiresAt: number; // Unix timestamp
+  expiresAt: number;
 }
 
 export interface AuthTokens {
@@ -30,7 +30,6 @@ export class AuthService {
   ) {}
 
   async handleStravaLogin(stravaUser: StravaUser): Promise<AuthTokens> {
-    // Find or create user based on Strava ID
     let user = await this.prisma.user.findUnique({
       where: { stravaId: stravaUser.stravaId },
     });
@@ -39,7 +38,6 @@ export class AuthService {
     const tokenExpiresAt = new Date(stravaUser.expiresAt * 1000);
 
     if (!user) {
-      // Create new user
       user = await this.prisma.user.create({
         data: {
           name: fullName,
@@ -51,7 +49,6 @@ export class AuthService {
         },
       });
     } else {
-      // Update existing user's avatar and tokens
       user = await this.prisma.user.update({
         where: { id: user.id },
         data: {
@@ -63,7 +60,6 @@ export class AuthService {
       });
     }
 
-    // Generate JWT
     const payload: JwtPayload = {
       sub: user.id,
       name: user.name,

@@ -2,7 +2,6 @@ import { spawn, execSync, ChildProcess } from "child_process";
 import * as path from "path";
 import { config } from "dotenv";
 
-// Load test environment
 config({ path: path.resolve(__dirname, "../.env.test") });
 
 let apiProcess: ChildProcess | null = null;
@@ -52,7 +51,6 @@ export async function setup() {
     throw error;
   }
 
-  // Use a known JWT secret for tests
   const jwtSecret = process.env.JWT_SECRET || "test-jwt-secret-for-e2e";
 
   console.log("🚀 Starting API server...");
@@ -77,7 +75,6 @@ export async function setup() {
     console.error(`[API ERROR] ${data.toString().trim()}`);
   });
 
-  // Store process reference for teardown
   (globalThis as any).__API_PROCESS__ = apiProcess;
 
   await waitForServer(apiUrl);
@@ -88,7 +85,6 @@ export async function teardown() {
   if (proc) {
     console.log("🛑 Stopping API server...");
     proc.kill("SIGTERM");
-    // Give it time to gracefully shutdown
     await new Promise((r) => setTimeout(r, 1000));
     console.log("✅ API server stopped");
   }

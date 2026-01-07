@@ -1,0 +1,124 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Club {
+  createdAt: DateTime!
+  id: String!
+  inviteCode: String!
+  name: String!
+  updatedAt: DateTime!
+}
+
+type ClubMember {
+  club: Club
+  clubId: String!
+  id: String!
+  joinedAt: DateTime!
+  role: String!
+  user: User
+  userId: String!
+}
+
+type Course {
+  distanceKm: Float!
+  id: String!
+  name: String!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Event {
+  club: Club
+  clubId: String!
+  course: Course
+  courseId: String!
+  date: DateTime!
+  id: String!
+
+  """The current user's time trial for this event"""
+  myTimeTrial: TimeTrial
+  timeTrials: [TimeTrial!]
+}
+
+input JoinClubInput {
+  inviteCode: String!
+}
+
+type Mutation {
+  joinClub(input: JoinClubInput!): ClubMember!
+
+  """Submit a time trial result for an event"""
+  submitTimeTrial(input: SubmitTimeTrialInput!): TimeTrial!
+}
+
+type Query {
+  event(id: String!): Event
+  events(clubId: String!): [Event!]!
+
+  """Get the most recent event for a course by course name"""
+  latestEventByCourseName(courseName: String!): Event
+
+  """Get current authenticated user"""
+  me: User!
+  myClubs: [ClubMember!]!
+
+  """Get all time trials for the current user in a specific club"""
+  myTimeTrials(clubId: String!): [TimeTrial!]!
+
+  """Get recent running activities from Strava"""
+  stravaActivities(after: String, before: String): [StravaActivity!]!
+}
+
+type StravaActivity {
+  """Distance in meters"""
+  distance: Int!
+
+  """Elapsed time in seconds"""
+  elapsedTime: Int!
+  id: String!
+
+  """Moving time in seconds"""
+  movingTime: Int!
+  name: String!
+  startDate: String!
+  startDateLocal: String!
+  type: String!
+}
+
+input SubmitTimeTrialInput {
+  """Event ID to submit time for"""
+  eventId: String!
+
+  """Time in milliseconds"""
+  timeMs: Int!
+}
+
+type TimeTrial {
+  createdAt: DateTime!
+  event: Event
+  eventId: String!
+  id: String!
+
+  """Time in milliseconds"""
+  timeMs: Int!
+  user: User
+  userId: String!
+}
+
+type User {
+  """Avatar URL"""
+  avatarUrl: String
+
+  """Unique identifier"""
+  id: String!
+
+  """User name"""
+  name: String!
+
+  """Strava ID"""
+  stravaId: String
+}

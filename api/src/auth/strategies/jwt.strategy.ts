@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable, UnauthorizedException, Inject } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { ConfigService } from "@nestjs/config";
@@ -6,22 +6,23 @@ import { PrismaService } from "@striders/database";
 import type { EnvironmentVariables } from "../../config/env.config";
 
 export interface JwtPayload {
-  sub: string; // user id
+  sub: string;
   name: string;
 }
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
   constructor(
+    @Inject(ConfigService)
     private readonly configService: ConfigService<EnvironmentVariables, true>,
     private readonly prisma: PrismaService
   ) {
-    const jwtConfig = configService.get("jwt", { infer: true });
+    const secret = process.env.JWT_SECRET || "fallback-secret";
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: jwtConfig.secret,
+      secretOrKey: secret,
     });
   }
 

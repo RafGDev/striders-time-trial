@@ -15,8 +15,6 @@ export interface SnsConfig {
   };
 }
 
-// Message type constants for SNS filtering
-// Add your message types here
 export const MessageTypes = {
   EXAMPLE_EVENT: "EXAMPLE_EVENT",
 } as const;
