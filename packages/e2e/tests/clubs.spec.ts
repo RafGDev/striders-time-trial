@@ -26,6 +26,7 @@ describe("Clubs Resolver", () => {
       data: {
         name: "Sydney Striders",
         inviteCode: "STRIDERS2024",
+        adminInviteCode: "ADMIN2024",
       },
     });
     testClubId = club.id;
@@ -101,7 +102,75 @@ describe("Clubs Resolver", () => {
       expect(response.errors?.[0].message).toContain("Invalid invite code");
     });
 
-    it("should fail when user is already a member", async () => {
+    it("should return existing membership when user is already a member", async () => {
+      const existingMembership = await prisma.clubMember.create({
+        data: {
+          userId: testUserId,
+          clubId: testClubId,
+          role: "member",
+        },
+      });
+
+      const response = await graphql<{
+        joinClub: { id: string; role: string };
+      }>(
+        `
+          mutation JoinClub($input: JoinClubInput!) {
+            joinClub(input: $input) {
+              id
+              role
+            }
+          }
+        `,
+        { input: { inviteCode: "STRIDERS2024" } },
+        testToken
+      );
+
+      expect(response.errors).toBeUndefined();
+      expect(response.data?.joinClub.id).toBe(existingMembership.id);
+      expect(response.data?.joinClub.role).toBe("member");
+    });
+
+    it("should allow user to join as admin with admin invite code", async () => {
+      const response = await graphql<{
+        joinClub: {
+          id: string;
+          role: string;
+          club: { id: string; name: string };
+        };
+      }>(
+        `
+          mutation JoinClub($input: JoinClubInput!) {
+            joinClub(input: $input) {
+              id
+              role
+              club {
+                id
+                name
+              }
+            }
+          }
+        `,
+        { input: { inviteCode: "ADMIN2024" } },
+        testToken
+      );
+
+      expect(response.errors).toBeUndefined();
+      expect(response.data?.joinClub.role).toBe("admin");
+      expect(response.data?.joinClub.club.id).toBe(testClubId);
+
+      const membership = await prisma.clubMember.findUnique({
+        where: {
+          userId_clubId: {
+            userId: testUserId,
+            clubId: testClubId,
+          },
+        },
+      });
+      expect(membership?.role).toBe("admin");
+    });
+
+    it("should upgrade existing member to admin when using admin code", async () => {
       await prisma.clubMember.create({
         data: {
           userId: testUserId,
@@ -110,20 +179,33 @@ describe("Clubs Resolver", () => {
         },
       });
 
-      const response = await graphql(
+      const response = await graphql<{
+        joinClub: { id: string; role: string };
+      }>(
         `
           mutation JoinClub($input: JoinClubInput!) {
             joinClub(input: $input) {
               id
+              role
             }
           }
         `,
-        { input: { inviteCode: "STRIDERS2024" } },
+        { input: { inviteCode: "ADMIN2024" } },
         testToken
       );
 
-      expect(response.errors).toBeDefined();
-      expect(response.errors?.[0].message).toContain("already a member");
+      expect(response.errors).toBeUndefined();
+      expect(response.data?.joinClub.role).toBe("admin");
+
+      const membership = await prisma.clubMember.findUnique({
+        where: {
+          userId_clubId: {
+            userId: testUserId,
+            clubId: testClubId,
+          },
+        },
+      });
+      expect(membership?.role).toBe("admin");
     });
 
     it("should fail without authentication", async () => {

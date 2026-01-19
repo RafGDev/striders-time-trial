@@ -19,7 +19,7 @@ export interface StravaActivity {
 export class StravaService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly configService: ConfigService<EnvironmentVariables, true>
+    private readonly configService: ConfigService<EnvironmentVariables, true>,
   ) {}
 
   private async getValidAccessToken(userId: string): Promise<string> {
@@ -49,7 +49,7 @@ export class StravaService {
 
   private async refreshToken(
     userId: string,
-    refreshToken: string
+    refreshToken: string,
   ): Promise<string> {
     const stravaConfig = this.configService.get("strava", { infer: true });
 
@@ -88,7 +88,7 @@ export class StravaService {
       after?: Date;
       before?: Date;
       perPage?: number;
-    }
+    },
   ): Promise<StravaActivity[]> {
     const accessToken = await this.getValidAccessToken(userId);
 
@@ -97,13 +97,13 @@ export class StravaService {
     if (options?.after) {
       url.searchParams.set(
         "after",
-        Math.floor(options.after.getTime() / 1000).toString()
+        Math.floor(options.after.getTime() / 1000).toString(),
       );
     }
     if (options?.before) {
       url.searchParams.set(
         "before",
-        Math.floor(options.before.getTime() / 1000).toString()
+        Math.floor(options.before.getTime() / 1000).toString(),
       );
     }
     url.searchParams.set("per_page", String(options?.perPage ?? 30));
@@ -127,7 +127,7 @@ export class StravaService {
         a.type === "Run" ||
         a.sport_type === "Run" ||
         a.type === "VirtualRun" ||
-        a.sport_type === "VirtualRun"
+        a.sport_type === "VirtualRun",
     );
   }
 }

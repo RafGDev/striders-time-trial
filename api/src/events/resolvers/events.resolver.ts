@@ -1,16 +1,28 @@
-import { Args, Query, Resolver, ResolveField, Parent } from "@nestjs/graphql";
-import { UseGuards } from "@nestjs/common";
+import {
+  Args,
+  Query,
+  Mutation,
+  Resolver,
+  ResolveField,
+  Parent,
+} from "@nestjs/graphql";
+import { UseGuards, ForbiddenException } from "@nestjs/common";
 import { Event } from "../entities/event.entity";
 import { EventsService } from "../services/events.service";
+import { CreateEventInput } from "../dto/create-event.input";
 import { TimeTrial } from "../../time-trials/entities/time-trial.entity";
 import { Club } from "../../clubs/entities/club.entity";
 import { Course } from "../../courses/entities/course.entity";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { CurrentUser } from "../../auth/decorators/current-user.decorator";
+import { PrismaService } from "@striders/database";
 
 @Resolver(() => Event)
 export class EventsResolver {
-  constructor(private readonly eventsService: EventsService) {}
+  constructor(
+    private readonly eventsService: EventsService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   @Query(() => [Event], { name: "events" })
   @UseGuards(JwtAuthGuard)
@@ -19,6 +31,7 @@ export class EventsResolver {
   }
 
   @Query(() => Event, { name: "event", nullable: true })
+  @UseGuards(JwtAuthGuard)
   findOne(@Args("id", { type: () => String }) id: string) {
     return this.eventsService.findOne(id);
   }
@@ -29,7 +42,7 @@ export class EventsResolver {
     description: "Get the most recent event for a course by course name",
   })
   findLatestByCourseName(
-    @Args("courseName", { type: () => String }) courseName: string
+    @Args("courseName", { type: () => String }) courseName: string,
   ) {
     return this.eventsService.findLatestByCourseName(courseName);
   }
@@ -38,7 +51,7 @@ export class EventsResolver {
   @UseGuards(JwtAuthGuard)
   async myTimeTrial(
     @Parent() event: Event,
-    @CurrentUser() user: { id: string }
+    @CurrentUser() user: { id: string },
   ): Promise<TimeTrial | null> {
     return this.eventsService.getUserTimeTrialForEvent(event.id, user.id);
   }
@@ -59,5 +72,30 @@ export class EventsResolver {
   async timeTrials(@Parent() event: Event): Promise<TimeTrial[]> {
     if (event.timeTrials) return event.timeTrials;
     return this.eventsService.getTimeTrials(event.id);
+  }
+
+  @Mutation(() => Event, {
+    name: "createEvent",
+    description: "Create a new event (admin only)",
+  })
+  @UseGuards(JwtAuthGuard)
+  async createEvent(
+    @CurrentUser() user: { id: string },
+    @Args("input") input: CreateEventInput,
+  ): Promise<Event> {
+    const membership = await this.prisma.clubMember.findUnique({
+      where: {
+        userId_clubId: {
+          userId: user.id,
+          clubId: input.clubId,
+        },
+      },
+    });
+
+    if (!membership || membership.role !== "admin") {
+      throw new ForbiddenException("Only club admins can create events");
+    }
+
+    return this.eventsService.create(input);
   }
 }

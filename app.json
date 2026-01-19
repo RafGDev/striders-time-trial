@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "a3305aac-a2ff-45eb-9644-12dcd505841c"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.rafaelgoesmann.striderstimetrial",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}

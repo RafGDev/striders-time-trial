@@ -23,8 +23,9 @@ export class ClubsResolver {
   @UseGuards(JwtAuthGuard)
   async joinClub(
     @CurrentUser() user: { id: string },
-    @Args("input") input: JoinClubInput
+    @Args("input") input: JoinClubInput,
   ): Promise<ClubMember> {
+    console.log("joinClub", user.id, input.inviteCode);
     return this.clubsService.joinClubIfNotMember(user.id, input.inviteCode);
   }
 

@@ -1,9 +1,17 @@
 import { describe, it, expect, beforeEach, afterAll } from "vitest";
-import { graphql, getPrisma, closePrisma, cleanDatabase } from "./helpers";
+import {
+  graphql,
+  getPrisma,
+  closePrisma,
+  cleanDatabase,
+  generateTestToken,
+} from "./helpers";
 
 describe("Events", () => {
   const prisma = getPrisma();
   let testUserId: string;
+  let testUserName: string;
+  let testToken: string;
   let testClubId: string;
   let testCourseId: string;
   let testCourseName: string;
@@ -13,29 +21,28 @@ describe("Events", () => {
   beforeEach(async () => {
     await cleanDatabase();
 
-    // Create test user
+    testUserName = `Runner ${Date.now()}`;
     const user = await prisma.user.create({
-      data: { name: `Runner ${Date.now()}` },
+      data: { name: testUserName },
     });
     testUserId = user.id;
+    testToken = generateTestToken(user.id, user.name);
 
-    // Create test club
     const club = await prisma.club.create({
       data: {
         name: `Test Club ${Date.now()}`,
         inviteCode: `CLUB${Date.now()}`,
+        adminInviteCode: `ADMIN${Date.now()}`,
       },
     });
     testClubId = club.id;
 
-    // Create test course
     testCourseName = `Bay Run 5K ${Date.now()}`;
     const course = await prisma.course.create({
       data: { name: testCourseName, distanceKm: 5.0 },
     });
     testCourseId = course.id;
 
-    // Create test event
     const event = await prisma.event.create({
       data: {
         date: new Date("2024-06-15"),
@@ -45,10 +52,9 @@ describe("Events", () => {
     });
     testEventId = event.id;
 
-    // Create test time trial
     const timeTrial = await prisma.timeTrial.create({
       data: {
-        timeMs: 1500000, // 25 minutes
+        timeMs: 1500000,
         userId: testUserId,
         eventId: testEventId,
       },
@@ -88,7 +94,8 @@ describe("Events", () => {
             }
           }
         `,
-        { id: testEventId }
+        { id: testEventId },
+        testToken
       );
 
       expect(response.errors).toBeUndefined();
@@ -125,7 +132,8 @@ describe("Events", () => {
             }
           }
         `,
-        { id: testEventId }
+        { id: testEventId },
+        testToken
       );
 
       expect(response.errors).toBeUndefined();
@@ -144,11 +152,27 @@ describe("Events", () => {
             }
           }
         `,
-        { id: "non-existent-id" }
+        { id: "non-existent-id" },
+        testToken
       );
 
       expect(response.errors).toBeUndefined();
       expect(response.data?.event).toBeNull();
+    });
+
+    it("should fail without authentication", async () => {
+      const response = await graphql(
+        `
+          query GetEvent($id: String!) {
+            event(id: $id) {
+              id
+            }
+          }
+        `,
+        { id: testEventId }
+      );
+
+      expect(response.errors).toBeDefined();
     });
   });
 
@@ -183,7 +207,6 @@ describe("Events", () => {
     });
 
     it("should return the most recent event when multiple exist", async () => {
-      // Create an older event
       await prisma.event.create({
         data: {
           date: new Date("2024-01-01"),
@@ -192,7 +215,6 @@ describe("Events", () => {
         },
       });
 
-      // Create a newer event
       const newerEvent = await prisma.event.create({
         data: {
           date: new Date("2024-12-01"),
@@ -267,6 +289,145 @@ describe("Events", () => {
 
       expect(response.errors).toBeUndefined();
       expect(response.data?.latestEventByCourseName).toBeNull();
+    });
+  });
+
+  describe("Query: events (by club)", () => {
+    it("should return events for a club when authenticated", async () => {
+      const response = await graphql<{
+        events: Array<{
+          id: string;
+          date: string;
+          course: { id: string; name: string };
+          club: { id: string; name: string };
+        }>;
+      }>(
+        `
+          query Events($clubId: String!) {
+            events(clubId: $clubId) {
+              id
+              date
+              course {
+                id
+                name
+              }
+              club {
+                id
+                name
+              }
+            }
+          }
+        `,
+        { clubId: testClubId },
+        testToken
+      );
+
+      expect(response.errors).toBeUndefined();
+      expect(response.data?.events).toHaveLength(1);
+      expect(response.data?.events[0].id).toBe(testEventId);
+      expect(response.data?.events[0].course.id).toBe(testCourseId);
+      expect(response.data?.events[0].club.id).toBe(testClubId);
+    });
+
+    it("should return empty array for club with no events", async () => {
+      const emptyClub = await prisma.club.create({
+        data: {
+          name: "Empty Club",
+          inviteCode: `EMPTY${Date.now()}`,
+          adminInviteCode: `EMPTYADMIN${Date.now()}`,
+        },
+      });
+
+      const response = await graphql<{ events: unknown[] }>(
+        `
+          query Events($clubId: String!) {
+            events(clubId: $clubId) {
+              id
+            }
+          }
+        `,
+        { clubId: emptyClub.id },
+        testToken
+      );
+
+      expect(response.errors).toBeUndefined();
+      expect(response.data?.events).toEqual([]);
+    });
+
+    it("should fail without authentication", async () => {
+      const response = await graphql(
+        `
+          query Events($clubId: String!) {
+            events(clubId: $clubId) {
+              id
+            }
+          }
+        `,
+        { clubId: testClubId }
+      );
+
+      expect(response.errors).toBeDefined();
+    });
+  });
+
+  describe("ResolveField: myTimeTrial", () => {
+    it("should return current user's time trial for the event", async () => {
+      const response = await graphql<{
+        event: {
+          id: string;
+          myTimeTrial: { id: string; timeMs: number };
+        };
+      }>(
+        `
+          query GetEvent($id: String!) {
+            event(id: $id) {
+              id
+              myTimeTrial {
+                id
+                timeMs
+              }
+            }
+          }
+        `,
+        { id: testEventId },
+        testToken
+      );
+
+      expect(response.errors).toBeUndefined();
+      expect(response.data?.event.myTimeTrial).not.toBeNull();
+      expect(response.data?.event.myTimeTrial.id).toBe(testTimeTrialId);
+      expect(response.data?.event.myTimeTrial.timeMs).toBe(1500000);
+    });
+
+    it("should return null when user has no time trial for the event", async () => {
+      const otherUser = await prisma.user.create({
+        data: { name: `Other User ${Date.now()}` },
+      });
+      const otherToken = generateTestToken(otherUser.id, otherUser.name);
+
+      const response = await graphql<{
+        event: {
+          id: string;
+          myTimeTrial: null;
+        };
+      }>(
+        `
+          query GetEvent($id: String!) {
+            event(id: $id) {
+              id
+              myTimeTrial {
+                id
+                timeMs
+              }
+            }
+          }
+        `,
+        { id: testEventId },
+        otherToken
+      );
+
+      expect(response.errors).toBeUndefined();
+      expect(response.data?.event.myTimeTrial).toBeNull();
     });
   });
 });

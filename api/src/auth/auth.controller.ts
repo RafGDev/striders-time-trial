@@ -18,11 +18,27 @@ class ExchangeTokenDto {
   redirectUri: string;
 }
 
+class RefreshTokenDto {
+  refreshToken: string;
+}
+
+interface StravaTokenResponse {
+  athlete: {
+    id: number;
+    firstname: string;
+    lastname: string;
+    profile: string;
+  };
+  access_token: string;
+  refresh_token: string;
+  expires_at: number;
+}
+
 @Controller("auth")
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly configService: ConfigService<EnvironmentVariables, true>
+    private readonly configService: ConfigService<EnvironmentVariables, true>,
   ) {}
 
   @Get("strava")
@@ -42,7 +58,7 @@ export class AuthController {
   async stravaCallback(
     @Query("code") code: string,
     @Query("error") error: string,
-    @Res() res: FastifyReply
+    @Res() res: FastifyReply,
   ) {
     if (error) {
       throw new BadRequestException(`Strava authorization failed: ${error}`);
@@ -70,7 +86,7 @@ export class AuthController {
       throw new UnauthorizedException("Failed to exchange code for token");
     }
 
-    const tokenData = await tokenResponse.json();
+    const tokenData = (await tokenResponse.json()) as StravaTokenResponse;
 
     const stravaUser = {
       stravaId: String(tokenData.athlete.id),
@@ -84,7 +100,6 @@ export class AuthController {
 
     const tokens = await this.authService.handleStravaLogin(stravaUser);
 
-    // Redirect to frontend with token
     const redirectUrl = new URL("/auth/callback", appUrl);
     redirectUrl.searchParams.set("token", tokens.accessToken);
     redirectUrl.searchParams.set("userId", tokens.user.id);
@@ -123,7 +138,7 @@ export class AuthController {
       throw new UnauthorizedException("Failed to exchange code for token");
     }
 
-    const tokenData = await tokenResponse.json();
+    const tokenData = (await tokenResponse.json()) as StravaTokenResponse;
 
     const stravaUser = {
       stravaId: String(tokenData.athlete.id),
@@ -139,7 +154,35 @@ export class AuthController {
 
     return {
       token: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
       user: tokens.user,
     };
+  }
+
+  @Post("refresh")
+  async refreshToken(@Body() body: RefreshTokenDto) {
+    const { refreshToken } = body;
+
+    if (!refreshToken) {
+      throw new BadRequestException("Refresh token is required");
+    }
+
+    const tokens = await this.authService.refreshAccessToken(refreshToken);
+
+    return {
+      token: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    };
+  }
+
+  @Post("logout")
+  async logout(@Body() body: RefreshTokenDto) {
+    const { refreshToken } = body;
+
+    if (refreshToken) {
+      await this.authService.revokeRefreshToken(refreshToken);
+    }
+
+    return { success: true };
   }
 }

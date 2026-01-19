@@ -12,7 +12,7 @@ import type { EnvironmentVariables } from "../config/env.config";
     PassportModule.register({ defaultStrategy: "jwt" }),
     JwtModule.registerAsync({
       useFactory: (
-        configService: ConfigService<EnvironmentVariables, true>
+        configService: ConfigService<EnvironmentVariables, true>,
       ): JwtModuleOptions => {
         const jwtConfig = configService.get("jwt", { infer: true });
         return {

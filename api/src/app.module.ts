@@ -23,7 +23,7 @@ import { StravaModule } from "./strava/strava.module";
     PrismaModule,
     MessagingModule.forRootAsync({
       useFactory: (
-        configService: ConfigService<EnvironmentVariables, true>
+        configService: ConfigService<EnvironmentVariables, true>,
       ) => {
         const awsConfig = configService.get("aws", { infer: true });
         return {
@@ -41,13 +41,16 @@ import { StravaModule } from "./strava/strava.module";
       },
       inject: [ConfigService],
     }),
-    GraphQLModule.forRoot<ApolloDriverConfig>({
+    GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: "schema.graphql",
-      sortSchema: true,
-      playground: true,
-      introspection: true,
-      context: ({ request }: { request: unknown }) => ({ req: request }),
+      useFactory: () => ({
+        autoSchemaFile:
+          process.env.NODE_ENV === "production" ? true : "schema.graphql",
+        sortSchema: true,
+        playground: true,
+        introspection: true,
+        context: ({ req }: { req: Request }) => ({ req }),
+      }),
     }),
     AuthModule,
     UsersModule,

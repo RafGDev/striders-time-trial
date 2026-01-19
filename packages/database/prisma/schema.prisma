@@ -9,30 +9,44 @@ datasource db {
 }
 
 model User {
-    id                   String       @id @default(uuid())
-    name                 String       @unique
-    email                String?      @unique
+    id                   String         @id @default(uuid())
+    name                 String         @unique
+    email                String?        @unique
     avatarUrl            String?
-    stravaId             String?      @unique
+    stravaId             String?        @unique
     stravaAccessToken    String?
     stravaRefreshToken   String?
     stravaTokenExpiresAt DateTime?
-    googleId             String?      @unique
+    googleId             String?        @unique
     timeTrials           TimeTrial[]
     memberships          ClubMember[]
-    createdAt            DateTime     @default(now())
+    refreshTokens        RefreshToken[]
+    createdAt            DateTime       @default(now())
 
     @@map("users")
 }
 
+model RefreshToken {
+    id        String   @id @default(uuid())
+    token     String   @unique
+    userId    String
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    expiresAt DateTime
+    createdAt DateTime @default(now())
+
+    @@index([userId])
+    @@map("refresh_tokens")
+}
+
 model Club {
-    id         String       @id @default(uuid())
-    name       String
-    inviteCode String       @unique
-    members    ClubMember[]
-    events     Event[]
-    createdAt  DateTime     @default(now())
-    updatedAt  DateTime     @updatedAt
+    id              String       @id @default(uuid())
+    name            String
+    inviteCode      String       @unique
+    adminInviteCode String       @unique
+    members         ClubMember[]
+    events          Event[]
+    createdAt       DateTime     @default(now())
+    updatedAt       DateTime     @updatedAt
 
     @@map("clubs")
 }

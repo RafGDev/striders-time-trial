@@ -43,7 +43,7 @@ export class StravaResolver {
   async getStravaActivities(
     @CurrentUser() user: { id: string },
     @Args("after", { type: () => String, nullable: true }) after?: string,
-    @Args("before", { type: () => String, nullable: true }) before?: string
+    @Args("before", { type: () => String, nullable: true }) before?: string,
   ): Promise<StravaActivity[]> {
     const activities = await this.stravaService.getActivities(user.id, {
       after: after ? new Date(after) : undefined,

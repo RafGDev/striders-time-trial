@@ -57,4 +57,10 @@ export class TimeTrialsService {
       include: { course: true, club: true },
     });
   }
+
+  async getUser(userId: string) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+  }
 }

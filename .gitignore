@@ -30,3 +30,4 @@ coverage/
 # Prisma
 packages/database/src/generated/
 
+ios/

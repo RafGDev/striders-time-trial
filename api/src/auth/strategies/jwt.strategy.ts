@@ -15,9 +15,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
   constructor(
     @Inject(ConfigService)
     private readonly configService: ConfigService<EnvironmentVariables, true>,
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
   ) {
-    const secret = process.env.JWT_SECRET || "fallback-secret";
+    const jwtConfig = configService.get("jwt", { infer: true });
+    const secret = jwtConfig?.secret ?? "fallback-secret";
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),

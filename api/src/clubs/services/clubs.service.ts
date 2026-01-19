@@ -14,18 +14,33 @@ export class ClubsService {
 
   async joinClubIfNotMember(
     userId: string,
-    inviteCode: string
+    inviteCode: string,
   ): Promise<ClubMember> {
-    // Find club by invite code
-    const club = await this.prisma.club.findUnique({
+    // First, try to find club by regular invite code
+    let club = await this.prisma.club.findUnique({
       where: { inviteCode },
     });
+
+    let role: "member" | "admin" = "member";
+
+    // If not found, try admin invite code
+    if (!club) {
+      club = await this.prisma.club.findUnique({
+        where: { adminInviteCode: inviteCode },
+      });
+
+      if (club) {
+        role = "admin";
+      }
+    }
+
+    const clubs = await this.prisma.club.findMany();
+    console.log("clubs", clubs);
 
     if (!club) {
       throw new BadRequestException("Invalid invite code");
     }
 
-    // Check if user is already a member
     const existingMembership = await this.prisma.clubMember.findUnique({
       where: {
         userId_clubId: {
@@ -35,13 +50,22 @@ export class ClubsService {
       },
     });
 
-    if (existingMembership) return existingMembership;
+    // If already a member, optionally upgrade to admin if using admin code
+    if (existingMembership) {
+      if (role === "admin" && existingMembership.role !== "admin") {
+        return this.prisma.clubMember.update({
+          where: { id: existingMembership.id },
+          data: { role: "admin" },
+        });
+      }
+      return existingMembership;
+    }
 
     return this.prisma.clubMember.create({
       data: {
         userId,
         clubId: club.id,
-        role: "member",
+        role,
       },
     });
   }

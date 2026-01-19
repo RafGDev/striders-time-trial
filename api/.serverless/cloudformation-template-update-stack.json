@@ -162,7 +162,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/striders-api/dev/1767763162586-2026-01-07T05:19:22.586Z/striders-api.zip"
+          "S3Key": "serverless/striders-api/dev/1768455927608-2026-01-15T05:45:27.608Z/striders-api.zip"
         },
         "Handler": "src/lambda.handler",
         "Runtime": "nodejs20.x",
@@ -191,14 +191,14 @@
         "ApiLogGroup"
       ]
     },
-    "ApiLambdaVersionTLRDboYK9bDSBSKt4H6HGBRmeY7qttjiK1kPf8cLPAs": {
+    "ApiLambdaVersionnY2AuApK8vTMLYPxTgWdof4Qz4q2HqrIMvRBdvLI": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "ApiLambdaFunction"
         },
-        "CodeSha256": "cF1r3AwBaNWRcDKfQ/JfKNXA98osnhQmoiMYc1gUPCE="
+        "CodeSha256": "p0UhGoaQb0rpe0Zsq951rnHlanxiDkLfRoP9vE/VMl0="
       }
     },
     "ApiGatewayRestApi": {
@@ -416,7 +416,7 @@
         "ApiLambdaPermissionApiGateway"
       ]
     },
-    "ApiGatewayDeployment1767763160331": {
+    "ApiGatewayDeployment1768455925356": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -481,7 +481,7 @@
     "ApiLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "ApiLambdaVersionTLRDboYK9bDSBSKt4H6HGBRmeY7qttjiK1kPf8cLPAs"
+        "Ref": "ApiLambdaVersionnY2AuApK8vTMLYPxTgWdof4Qz4q2HqrIMvRBdvLI"
       },
       "Export": {
         "Name": "sls-striders-api-dev-ApiLambdaFunctionQualifiedArn"

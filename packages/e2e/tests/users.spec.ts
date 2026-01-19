@@ -16,7 +16,6 @@ describe("Users", () => {
   beforeEach(async () => {
     await cleanDatabase();
 
-    // Create a test user with full details
     testUserName = `Test User ${Date.now()}`;
     const user = await prisma.user.create({
       data: {

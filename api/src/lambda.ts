@@ -14,7 +14,7 @@ import { AppModule } from "./app.module";
 
 type LambdaHandler = (
   event: APIGatewayProxyEvent,
-  context: Context
+  context: Context,
 ) => Promise<APIGatewayProxyResult>;
 
 let cachedHandler: LambdaHandler;
@@ -23,7 +23,7 @@ async function bootstrap(): Promise<LambdaHandler> {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter(),
-    { logger: ["error", "warn"] }
+    { logger: ["error", "warn"] },
   );
 
   app.enableCors({
@@ -41,7 +41,7 @@ async function bootstrap(): Promise<LambdaHandler> {
 
 export const handler = async (
   event: APIGatewayProxyEvent,
-  context: Context
+  context: Context,
 ): Promise<APIGatewayProxyResult> => {
   if (!cachedHandler) {
     cachedHandler = await bootstrap();

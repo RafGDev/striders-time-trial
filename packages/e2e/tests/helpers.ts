@@ -62,6 +62,6 @@ export function generateTestToken(
 export async function cleanDatabase(): Promise<void> {
   const prisma = getPrisma();
   await prisma.$executeRawUnsafe(`
-    TRUNCATE TABLE club_members, clubs, time_trials, events, courses, users CASCADE
+    TRUNCATE TABLE refresh_tokens, club_members, clubs, time_trials, events, courses, users CASCADE
   `);
 }

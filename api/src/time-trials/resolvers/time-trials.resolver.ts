@@ -13,6 +13,7 @@ import { SubmitTimeTrialInput } from "../dto/submit-time-trial.input";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 import { Event } from "../../events/entities/event.entity";
+import { User } from "../../users/entities/user.entity";
 
 @Resolver(() => TimeTrial)
 export class TimeTrialsResolver {
@@ -25,7 +26,7 @@ export class TimeTrialsResolver {
   @UseGuards(JwtAuthGuard)
   async myTimeTrials(
     @CurrentUser() user: { id: string },
-    @Args("clubId", { type: () => String }) clubId: string
+    @Args("clubId", { type: () => String }) clubId: string,
   ) {
     return this.timeTrialsService.findByUserAndClub(user.id, clubId);
   }
@@ -37,7 +38,7 @@ export class TimeTrialsResolver {
   @UseGuards(JwtAuthGuard)
   async submitTimeTrial(
     @CurrentUser() user: { id: string },
-    @Args("input") input: SubmitTimeTrialInput
+    @Args("input") input: SubmitTimeTrialInput,
   ) {
     return this.timeTrialsService.create({
       userId: user.id,
@@ -50,5 +51,11 @@ export class TimeTrialsResolver {
   async event(@Parent() timeTrial: TimeTrial): Promise<Event | null> {
     if (timeTrial.event) return timeTrial.event;
     return this.timeTrialsService.getEvent(timeTrial.eventId);
+  }
+
+  @ResolveField(() => User, { nullable: true })
+  async user(@Parent() timeTrial: TimeTrial): Promise<User | null> {
+    if (timeTrial.user) return timeTrial.user;
+    return this.timeTrialsService.getUser(timeTrial.userId);
   }
 }

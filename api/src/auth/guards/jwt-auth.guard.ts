@@ -1,20 +1,22 @@
 import { Injectable, ExecutionContext } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { GqlExecutionContext } from "@nestjs/graphql";
+import type { FastifyRequest } from "fastify";
+
+interface GqlContext {
+  req?: FastifyRequest;
+}
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard("jwt") {
-  getRequest(context: ExecutionContext) {
-    // Handle both REST and GraphQL contexts
+  getRequest(context: ExecutionContext): FastifyRequest {
     const ctx = GqlExecutionContext.create(context);
-    const gqlContext = ctx.getContext();
+    const gqlContext = ctx.getContext<GqlContext>();
 
-    // If it's a GraphQL request, get the request from context
     if (gqlContext.req) {
       return gqlContext.req;
     }
 
-    // Otherwise it's a REST request
-    return context.switchToHttp().getRequest();
+    return context.switchToHttp().getRequest<FastifyRequest>();
   }
 }

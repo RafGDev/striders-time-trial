@@ -86,7 +86,7 @@ export class EnvironmentVariables {
 }
 
 export function validate(
-  config: Record<string, unknown>
+  config: Record<string, unknown>,
 ): EnvironmentVariables {
   const transformedConfig = {
     database: {
@@ -121,7 +121,7 @@ export function validate(
     transformedConfig,
     {
       enableImplicitConversion: true,
-    }
+    },
   );
 
   const errors = validateSync(validatedConfig, {
